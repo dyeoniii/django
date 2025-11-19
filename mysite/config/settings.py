@@ -80,10 +80,10 @@ DATABASES = {
     'default': {
         'ENGINE': os.environ.get('DJANGO_DB_ENGINE', 'django.db.backends.sqlite3'),
         'NAME': os.environ.get('DJANGO_DB_NAME', os.path.join(BASE_DIR, 'db.sqlite3')),
-        'USER': os.environ.get('DJANGO_DB_USER', ''),
-        'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD', ''),
-        'HOST': os.environ.get('DJANGO_DB_HOST', ''),
-        'PORT': os.environ.get('DJANGO_DB_PORT', ''),
+        'USER': os.environ.get('DJANGO_DB_USER', 'mysite'),
+        'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD', 'ZHllb25paWk='),
+        'HOST': os.environ.get('DJANGO_DB_HOST', 'postgres'),
+        'PORT': os.environ.get('DJANGO_DB_PORT', '5432'),
     }
 }
 
