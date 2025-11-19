@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     environment {
-        // Docker Hub 이미지 이름
+        // Docker Hub 이미지 이름 (이미 이렇게 쓰고 있지?)
         DOCKER_IMAGE        = "dyeoniii/django"
 
-        // Jenkins에 등록한 Docker Hub credentials ID
+        // Docker Hub credentials ID (Jenkins 자격증명 ID)
         DOCKER_CREDENTIALS  = "dockerhub-login"
 
-        // Jenkins에 등록한 GitHub PAT credentials ID
+        // GitHub credentials ID (앱/매니페스트 레포 둘 다에 쓸 PAT)
         GIT_CREDENTIALS     = "github-token"
 
         // 매니페스트 레포 정보
@@ -51,44 +51,51 @@ pipeline {
 
         stage('Update Manifests Repo') {
             steps {
+                // 매니페스트 레포를 워크스페이스 안에 clone
                 dir(MANIFEST_REPO_DIR) {
-                    // 매니페스트 레포 체크아웃 (있으면 pull, 없으면 clone)
+                    // 이미 디렉터리가 있으면 pull, 없으면 clone
                     script {
-                        checkout([
-                            $class: 'GitSCM',
-                            branches: [[name: '*/main']],
-                            userRemoteConfigs: [[
-                                url: MANIFEST_REPO_URL,
-                                credentialsId: GIT_CREDENTIALS
-                            ]]
-                        ])
+                        if (fileExists(".git")) {
+                            // 기존 clone 이 있으면 최신으로 갱신
+                            checkout([
+                                $class: 'GitSCM',
+                                branches: [[name: '*/main']],
+                                userRemoteConfigs: [[
+                                    url: MANIFEST_REPO_URL,
+                                    credentialsId: GIT_CREDENTIALS
+                                ]]
+                            ])
+                        } else {
+                            // 처음일 때 clone
+                            checkout([
+                                $class: 'GitSCM',
+                                branches: [[name: '*/main']],
+                                userRemoteConfigs: [[
+                                    url: MANIFEST_REPO_URL,
+                                    credentialsId: GIT_CREDENTIALS
+                                ]]
+                            ])
+                        }
                     }
 
-                    // yaml 파일 안의 image 태그를 현재 BUILD_NUMBER로 교체
+                    // PowerShell로 yaml 내부 image 태그를 현재 BUILD_NUMBER로 교체
                     bat """
                     powershell -Command ^
-                      "(Get-Content 'django/django-node1-deploy.yml') -replace 'image: dyeoniii/django:.*', 'image: dyeoniii/django:${BUILD_NUMBER}' | Set-Content 'django/django-node1-deploy.yml';" ^
-                      "(Get-Content 'django/django-node2-deploy.yml') -replace 'image: dyeoniii/django:.*', 'image: dyeoniii/django:${BUILD_NUMBER}' | Set-Content 'django/django-node2-deploy.yml';"
+                      "(Get-Content 'django/django-node1-deploy.yml') -replace 'image: dyeoniii/django:.*', 'image: jjunch/django:${BUILD_NUMBER}' | Set-Content 'django/django-node1-deploy.yml';" ^
+                      "(Get-Content 'django/django-node2-deploy.yml') -replace 'image: dyeoniii/django:.*', 'image: jjunch/django:${BUILD_NUMBER}' | Set-Content 'django/django-node2-deploy.yml';"
                     """
 
                     // git 커밋 & 푸시
-                    withCredentials([usernamePassword(
-                        credentialsId: GIT_CREDENTIALS,
-                        usernameVariable: 'GIT_USER',
-                        passwordVariable: 'GIT_TOKEN'
-                    )]) {
-                        bat """
-                        git status
-                        git config user.name "dyeoniii"
-                        git config user.email "rlaehdus0410@gmail.com"
-                        git add django/django-node1-deploy.yml django/django-node2-deploy.yml
+                    bat """
+                    git status
+                    git config user.name "dyeoniii"
+                    git config user.email "rlaehdus0410@gmail.com"
+                    git add django/django-node1-deploy.yml django/django-node2-deploy.yml
 
-                        git commit -m "Update Django image to build ${BUILD_NUMBER}" || echo No changes to commit
+                    git commit -m "Update Django image to build ${BUILD_NUMBER}" || echo No changes to commit
 
-                        git remote set-url origin https://%GIT_USER%:%GIT_TOKEN%@github.com/dyeoniii/django-k8s-manifests.git
-                        git push origin HEAD:main
-                        """
-                    }
+                    git push origin main
+                    """
                 }
             }
         }
