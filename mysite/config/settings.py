@@ -82,7 +82,7 @@ DATABASES = {
         'NAME': os.environ.get('DJANGO_DB_NAME', os.path.join(BASE_DIR, 'db.sqlite3')),
         'USER': os.environ.get('DJANGO_DB_USER', 'mysite'),
         'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD', 'ZHllb25paWk='),
-        'HOST': os.environ.get('DJANGO_DB_HOST', 'postgres'),
+        'HOST': os.environ.get('DJANGO_DB_HOST', 'postgres-svc'),
         'PORT': os.environ.get('DJANGO_DB_PORT', '5432'),
     }
 }
