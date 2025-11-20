@@ -85,7 +85,7 @@ pipeline {
 
                         git commit -m "Update Django image to build ${BUILD_NUMBER}" || echo No changes to commit
 
-                        git remote set-url origin https://%GIT_USER%:%GIT_TOKEN%@github.com/jjunch/django-k8s-manifests.git
+                        git remote set-url origin https://%GIT_USER%:%GIT_TOKEN%@github.com/dyeoniii/django-k8s-manifests.git
                         git push origin HEAD:main
                         """
                     }
